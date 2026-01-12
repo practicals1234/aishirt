@@ -115,6 +115,25 @@ os.makedirs("database", exist_ok=True)
 MODEL_PROMPT = "A professional fashion studio shot of a white male model from the waist up, wearing a tailored shirt made from this cloth. Focus on the shirt fit and texture. Half body shot."
 FLATLAY_PROMPT = "A high-end flat lay of a folded shirt using this fabric, professional lighting."
 
+def check_access():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if not st.session_state.authenticated:
+        st.title("🔒 Restricted Access")
+        pwd = st.text_input("Enter access password", type="password")
+
+        if pwd:
+            if pwd == st.secrets["APP_PASSWORD"]:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Incorrect password")
+
+        st.stop()
+
+check_access()
+
 def save_to_index(name, link):
     data = {}
     if os.path.exists(DB_PATH):
