@@ -1,0 +1,8 @@
+streamlit
+google-genai
+Pillow
+fpdf2
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+google-auth<2.42.0
