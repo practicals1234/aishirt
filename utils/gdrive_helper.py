@@ -65,35 +65,52 @@
 #     return file["webViewLink"]
 
 
+import os
 import io
 import socket
 import streamlit as st
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 
+# --- CONFIGURATION ---
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+TOKEN_FILE = "token.json"
+CLIENT_SECRET_FILE = "client_secret.json"
 
 def get_drive_service():
-    """Authenticate using secrets instead of local files."""
+    """Authenticate using local token.json (Local) or st.secrets (Cloud)."""
     creds = None
 
-    # 1. Try to load credentials from the token in secrets
-    if "gdrive_token" in st.secrets:
+    # 1. Try to load from local token.json file first (Local Development)
+    if os.path.exists(TOKEN_FILE):
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    
+    # 2. If no local file, try to load from st.secrets (Cloud Deployment)
+    elif "gdrive_token" in st.secrets:
         token_info = dict(st.secrets["gdrive_token"])
         creds = Credentials.from_authorized_user_info(token_info, SCOPES)
 
-    # 2. If token is invalid/missing, we handle the flow
+    # 3. If no credentials or they are invalid, handle refresh or new login
     if not creds or not creds.valid:
-        # In a cloud environment, 'run_local_server' won't work.
-        # You must ensure your token.json in secrets is fresh from your local test.
         if creds and creds.expired and creds.refresh_token:
-            from google.auth.transport.requests import Request
+            st.write("🔄 Refreshing G-Drive Access...")
             creds.refresh(Request())
         else:
-            st.error("G-Drive Token missing or expired. Please run the app locally once to generate a new token.json.")
-            st.stop()
+            # TRIGGER LOCAL LOGIN FLOW
+            # This only works on your local machine, not on Streamlit Cloud
+            if os.path.exists(CLIENT_SECRET_FILE):
+                st.info("🔑 Opening browser for Google Login...")
+                flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+                creds = flow.run_local_server(port=0)
+                # Save the new token locally so you can copy it to secrets later
+                with open(TOKEN_FILE, "w") as token:
+                    token.write(creds.to_json())
+            else:
+                st.error("G-Drive Setup Error: 'client_secret.json' not found and no valid token in secrets.")
+                st.stop()
 
     socket.setdefaulttimeout(300)
     return build("drive", "v3", credentials=creds)

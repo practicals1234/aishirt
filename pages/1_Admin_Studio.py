@@ -112,7 +112,7 @@ FOLDER_ID = "18PR9msRprpjjwFr5aHNIZfUonUzTZyEM"
 DB_PATH = "database/collections.json"
 os.makedirs("database", exist_ok=True)
 
-MODEL_PROMPT = "A professional fashion studio shot of a white male model from the waist up, wearing a tailored shirt made from this cloth. Focus on the shirt fit and texture. Half body shot."
+MODEL_PROMPT = "A professional fashion studio shot of a handsome white male model from the waist up, wearing a tailored shirt made from this cloth. Focus on the shirt fit and texture. Half body shot."
 FLATLAY_PROMPT = "A high-end flat lay of a folded shirt using this fabric, professional lighting."
 
 def check_access():
