@@ -65,41 +65,37 @@
 #     return file["webViewLink"]
 
 
-import os
 import io
 import socket
 import streamlit as st
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 
-# --- CONFIGURATION ---
 SCOPES = ["https://www.googleapis.com/auth/drive"]
-TOKEN_FILE = "token.json"
-CLIENT_SECRET_FILE = "client_secret.json"
 
 def get_drive_service():
-    """Authenticate user via OAuth and return Drive service with increased timeout."""
+    """Authenticate using secrets instead of local files."""
     creds = None
 
-    # Load existing credentials if they exist
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    # 1. Try to load credentials from the token in secrets
+    if "gdrive_token" in st.secrets:
+        token_info = dict(st.secrets["gdrive_token"])
+        creds = Credentials.from_authorized_user_info(token_info, SCOPES)
 
-    # If no valid credentials, run the OAuth flow
+    # 2. If token is invalid/missing, we handle the flow
     if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            CLIENT_SECRET_FILE, SCOPES
-        )
-        creds = flow.run_local_server(port=0)
-        with open(TOKEN_FILE, "w") as token:
-            token.write(creds.to_json())
+        # In a cloud environment, 'run_local_server' won't work.
+        # You must ensure your token.json in secrets is fresh from your local test.
+        if creds and creds.expired and creds.refresh_token:
+            from google.auth.transport.requests import Request
+            creds.refresh(Request())
+        else:
+            st.error("G-Drive Token missing or expired. Please run the app locally once to generate a new token.json.")
+            st.stop()
 
-    # Set a global timeout for the socket (300 seconds = 5 minutes)
-    # This prevents the "Read operation timed out" error during large transfers
     socket.setdefaulttimeout(300)
-
     return build("drive", "v3", credentials=creds)
 
 def upload_to_drive(file_content, file_name, folder_id):
