@@ -146,7 +146,7 @@ st.title("🏭 Bulk Collection Creator")
 col1, col2 = st.columns(2)
 with col1:
     company_name = st.text_input("Company Name", value="RAMGOPAL FASHION FABRICS")
-    col_name = st.text_input("Collection Name", placeholder="e.g. Lakshya")
+    col_name = st.text_input("Collection Name", placeholder=)
 with col2:
     brand_logo = st.file_uploader("Upload Company Logo", type=['jpg', 'jpeg', 'png'])
 
