@@ -129,9 +129,7 @@ def check_access():
                 st.rerun()
             else:
                 st.error("Incorrect password")
-
         st.stop()
-
 check_access()
 
 def save_to_index(name, link):
@@ -160,7 +158,7 @@ if submit and col_name and files:
         with st.status("🏗️ Building Branded Catalog...", expanded=True) as status:
             
             # 1. Selection: Pick ONE CAD and crop it for purity
-            target_cad_file = random.choice(files)
+            target_cad_file = files[0]
             full_cad_img = Image.open(target_cad_file)
             top_design, bottom_design = crop_cad(full_cad_img)
             
